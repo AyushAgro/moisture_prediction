@@ -1,5 +1,9 @@
+import warnings
+
+warnings.filterwarnings('ignore')
 import numpy as np
 import pandas as pd
+from scipy import stats
 from scipy.stats import truncnorm
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
@@ -8,16 +12,18 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 import seaborn as sns
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error, mean_squared_log_error
-import warnings
+
 from sklearn.model_selection import train_test_split
 import os
 
 from IPython.display import display
 
 filename = 'moisture_data.csv'
-warnings.filterwarnings('ignore')
+plt.style.use('fivethirtyeight')
+
 np.random.seed(seed=42)
 pd.set_option('display.max_rows', 20)
 pd.set_option('display.max_columns', 10)
@@ -43,8 +49,8 @@ def data_preparation(*args, **kwargs):
     data = {}
     total_size = 20000
     for key, value in features_range.items():
-        random_values = get_truncated_normal(value[0], value[1], value[2], value[3])
-        data[key] = random_values.rvs(total_size)
+        random_values = stats.randint(value[2], value[3]).rvs(total_size)
+        data[key] = random_values
     pd.DataFrame(data).to_csv(filename, index=False)
     print('Data Preparation completed')
 
@@ -104,9 +110,31 @@ def fit_predict(model, X_train, X_test, y_train, y_test, model_name, *args, **kw
                                 'Mean Square Error': mean_squared_error(y_test, y_predicted),
                                 'Mean Absolute Error': mean_absolute_error(y_test, y_predicted),
                                 'Mean Square Log Error': mean_squared_log_error(y_test, y_predicted)}
+    print(f'\nCalculated Regression Metric for model {model_name}')
+    print('R2 Score -->', model_metric[model_name]['R2 Score'])
+    print('Mean Square Error -->', model_metric[model_name]['Mean Square Error'])
+    print('Mean Absolute Error -->', model_metric[model_name]['Mean Absolute Error'])
+    print('Mean Square Log Error -->', model_metric[model_name]['Mean Square Log Error'])
+    print('\n')
     print(f'Completed Training of the Model {model_name}')
+    # plot_regression_graph(X_test, y_test, y_predicted, model_name, n=20)
     print('*' * 40)
     return model
+
+
+# def plot_regression_graph(X, y_original, y_predicted, model, n):
+#     pca = PCA(1)
+#     X_dimension_reduce = pca.fit_transform(X)
+#     fig, ax = plt.subplots(figsize=(12, 6))
+#     plt.plot(X_dimension_reduce[:n], y_original[:n], 'o', label='Actual Moisture Content')
+#     plt.plot(X_dimension_reduce[:n], y_predicted[:n], label='Predicted Moisture Content')
+#     ax.spines.right.set_visible(False)
+#     ax.spines.top.set_visible(False)
+#     ax.set(title=f'Regression Plot for the model {model}',
+#            xlabel='Independent Variable in single dimension',
+#            ylabel='Moisture Content')
+#     plt.grid(True)
+#     plt.show()
 
 
 def fit_regression_model(X_train, X_test, y_train, y_test, *args, **kwargs):
