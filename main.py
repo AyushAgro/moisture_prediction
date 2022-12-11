@@ -1,6 +1,5 @@
 import warnings
 
-warnings.filterwarnings('ignore')
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -21,6 +20,7 @@ import os
 
 from IPython.display import display
 
+warnings.filterwarnings('ignore')
 filename = 'moisture_data.csv'
 plt.style.use('fivethirtyeight')
 
@@ -177,10 +177,10 @@ def fit_regression_model(X_train, X_test, y_train, y_test, *args, **kwargs):
 
     model_metric_df['ranking'] = model_metric_df['Mean Square Error'].rank(ascending=True)
     print('Saving Final Model Metric along with ranking')
-    model_metric_df =pd.DataFrame(model_metric_df).reset_index().rename({'index': 'Model Name'}, axis = 1)
+    model_metric_df = pd.DataFrame(model_metric_df).reset_index().rename({'index': 'Model Name'}, axis=1)
     model_metric_df['Model Name'] = model_metric_df['Model Name'].apply(lambda x: str(x).split('_')[0])
-    model_metric_df = model_metric_df.sort_values('Mean Square Error', ascending = False)
-    model_metric_df.to_csv('final_result.csv', index = False)
+    model_metric_df = model_metric_df.sort_values('Mean Square Error', ascending=False)
+    model_metric_df.to_csv('final_result.csv', index=False)
     print('Completed Model Training for all the model')
     return None
 
@@ -192,4 +192,4 @@ if __name__ == '__main__':
     print_stats(df)
     plot_histogram(df)
     X_train, X_test, y_train, y_test = processing_data(df)
-    models = fit_regression_model(X_train, X_test, y_train, y_test)
+    fit_regression_model(X_train, X_test, y_train, y_test)
