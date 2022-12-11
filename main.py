@@ -106,7 +106,9 @@ def fit_predict(model, X_train, X_test, y_train, y_test, model_name, *args, **kw
     print(f'Starting Training of Model {model_name}')
     model.fit(X_train, y_train)
     y_predicted = model.predict(X_test)
-    model_metric[model_name] = {'R2 Score': r2_score(y_test, y_predicted),
+    model_metric[model_name] = {'Number of Features': len(X_train.columns),
+                                'Features Used': list(X_train.columns),
+                                'R2 Score': r2_score(y_test, y_predicted),
                                 'Mean Square Error': mean_squared_error(y_test, y_predicted),
                                 'Mean Absolute Error': mean_absolute_error(y_test, y_predicted),
                                 'Mean Square Log Error': mean_squared_log_error(y_test, y_predicted)}
@@ -136,33 +138,51 @@ def fit_predict(model, X_train, X_test, y_train, y_test, model_name, *args, **kw
 #     plt.grid(True)
 #     plt.show()
 
+from itertools import chain, combinations
+
 
 def fit_regression_model(X_train, X_test, y_train, y_test, *args, **kwargs):
     print('*' * 40)
+    all_columns = list(X_train.columns)
+    columns_combination = chain(*map(lambda x: combinations(all_columns, x), range(0, len(all_columns) + 1)))
+    i = 1
     print('Fitting Regression Model')
-    linear_model = LinearRegression()
-    linear_model = fit_predict(linear_model, X_train, X_test, y_train, y_test, 'Linear Regression')
+    for columns in columns_combination:
+        if len(columns) == 0: continue
+        # if i == 2: break
+        X_train_process = X_train.loc[:, list(columns)]
+        X_test_process = X_test.loc[:, list(columns)]
+        linear_model = LinearRegression()
+        linear_model = fit_predict(linear_model, X_train_process, X_test_process, y_train, y_test,
+                                   f'Linear Regression_{i}')
 
-    support_vector = SVR()
-    support_vector = fit_predict(support_vector, X_train, X_test, y_train, y_test, 'Support Vector Regression')
+        support_vector = SVR()
+        support_vector = fit_predict(support_vector, X_train_process, X_test_process, y_train, y_test,
+                                     f'Support Vector Regression_{i}')
 
-    decision_tree = DecisionTreeRegressor()
-    decision_tree = fit_predict(decision_tree, X_train, X_test, y_train, y_test, 'Decision Tree Regression')
+        decision_tree = DecisionTreeRegressor()
+        decision_tree = fit_predict(decision_tree, X_train_process, X_test_process, y_train, y_test,
+                                    f'Decision Tree Regression_{i}')
 
-    random_forest = RandomForestRegressor()
-    random_forest = fit_predict(random_forest, X_train, X_test, y_train, y_test, 'Random Forest Regression')
+        random_forest = RandomForestRegressor()
+        random_forest = fit_predict(random_forest, X_train_process, X_test_process, y_train, y_test,
+                                    f'Random Forest Regression_{i}')
 
-    neural_network = MLPRegressor()
-    neural_network = fit_predict(neural_network, X_train, X_test, y_train, y_test, 'Multi Perception Neural Network')
+        neural_network = MLPRegressor()
+        neural_network = fit_predict(neural_network, X_train_process, X_test_process, y_train, y_test,
+                                     f'Multi Perception Neural Network_{i}')
+        i += 1
 
     model_metric_df = pd.DataFrame(model_metric).T
 
     model_metric_df['ranking'] = model_metric_df['Mean Square Error'].rank(ascending=True)
-    print('Displaying Final Model Metric along with ranking')
-    display(model_metric_df)
-    models_ = [linear_model, support_vector, decision_tree, random_forest, neural_network]
+    print('Saving Final Model Metric along with ranking')
+    model_metric_df =pd.DataFrame(model_metric_df).reset_index().rename({'index': 'Model Name'}, axis = 1)
+    model_metric_df['Model Name'] = model_metric_df['Model Name'].apply(lambda x: str(x).split('_')[0])
+    model_metric_df = model_metric_df.sort_values('Mean Square Error', ascending = False)
+    model_metric_df.to_csv('final_result.csv', index = False)
     print('Completed Model Training for all the model')
-    return models_
+    return None
 
 
 if __name__ == '__main__':
