@@ -98,6 +98,8 @@ def processing_data(df, *args, **kwargs):
     X_train, X_test, y_train, y_test = train_test_split(df_scaler.drop('moisture_ratio', axis=1),
                                                         df_scaler['moisture_ratio'],
                                                         random_state=42)
+    print('Training Length', len(X_train))
+    print('Testing Length', len(X_test))
     return X_train, X_test, y_train, y_test
 
 
